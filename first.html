@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Enter</title>
+  </head>
+  <body>
+    <form action="/socket" method="POST">
+      <label for="name"
+        >Name:
+        <input name="name" id="name" />
+      </label><br/>
+      <label for="pwd"
+        >Password
+        <input name="pwd" type="password" id="pwd" />
+      </label><br/>
+      <label for="radioButton1"
+        >Login
+        <input type="radio" name="process" id="radioButton1" value="login"/>
+      </label>
+      <label for="radioButton2"
+        >SignUp
+        <input type="radio" name="process" id="radioButton2" value="signup"/>
+      </label><br/>
+      <button type="submit">submit</button>
+    </form>
+  </body>
+</html>
