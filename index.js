@@ -13,7 +13,11 @@ const {
   insertUser,
   MongoConnect,
   doesUserExists,
+  insertGroup,
+  doesFieldExist,
+  insertMessages,
 } = require("./Mongo");
+const { randomUUID } = require("crypto");
 
 const userToSocketId = {};
 const userList = [];
@@ -102,22 +106,78 @@ app.get("/joinGroup", (req, res) => {
   res.sendFile(__dirname + "/getGroupData.html");
 });
 
-app.post("/privateChat", (req, res) => {
-  res.end("private chat page");
+app.get("/privateChat", (req, res) => {
+  res.sendFile(__dirname + "/privateChat.html");
+});
+
+app.post(
+  "/privateChat",
+  body("name", "username should be atleast 1 character in length")
+    .exists()
+    .trim()
+    .isLength({ min: 1 }),
+  body("name").custom(async (value, { req }) => {
+    let userExists = await doesUserExists("name");
+    if (!userExists) {
+      return Promise.reject("user doesn't exist");
+    }
+  }),
+  (req, res) => {
+    res.sendFile(__dirname + "/index.html");
+  }
+);
+
+app.post(
+  "/privateChat",
+  body("name", " name should be atleast 1 character in length")
+    .exists()
+    .trim()
+    .isLength({ min: 1 }),
+  (req, res) => {
+    res.sendFile(__dirname + "/index.html");
+  }
+);
+
+io.use((socket, next) => {
+  try {
+    console.log(socket.handshake,"socketttttttt")
+    const sessionID = socket.handshake.auth.sessionID;
+    if (sessionID) {
+      // find existing session
+      const session = sessionStore.findSession(sessionID);
+      if (session) {
+        socket.sessionID = sessionID;
+        return next();
+      }
+    }
+    socket.sessionID = randomUUID();
+  } catch (err) {
+    console.log(err);
+    return next(err);
+  }
+  next();
 });
 
 io.on("connection", (socket) => {
-  socket.on("join", (data) => {
+  socket.emit("session", {
+    sessionID: socket.sessionID,
+  });
+  socket.on("join", async (data) => {
     // userToSocketId[socket.id] = data.user;
     socket.join(data.currGroup);
+    let results = await insertGroup(data.currGroup);
     // console.log(userToSocketId);
     io.to(data.currGroup).emit(
       "join",
       `${data.user} has joined group ${data.currGroup} !`
     );
   });
-  socket.on("chat message", (msg) => {
+  socket.on("chat message", async (msg) => {
     io.to(msg.currGroup).emit("chat message", `${msg.user}:${msg.data}`);
+    let results = await insertMessages(msg.currGroup, {
+      [msg.user]: msg.data,
+    });
+    console.log(results);
     console.log("message: ", `${msg.user}:${msg.data}:${msg.currGroup}`);
   });
   socket.on("disconnect", () => {
@@ -131,4 +191,5 @@ server.listen(3000, async () => {
   console.log("listening on *:3000");
   // await updateUser("testuser0", ["dsfsdfsdfdsfsffsf555555555555"]);
   // doesUserExists("testuser1")
+  // await insertGroup("hhh6");
 });

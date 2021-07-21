@@ -18,21 +18,21 @@ let MongoConnect = async () => {
     console.log(err);
   }
 };
-const insertUser = async (userId,pwd, groups = ["common"]) => {
+const insertUser = async (userId, pwd, groups = ["common"]) => {
   try {
     // let results = await doesUserExists(userId);
     // if (results ? true : false) {
-      let dataToInsert = {
-        userId: userId,
-        pwd:pwd,
-        groups: groups,
-      };
-      const result = await client
-        .db("data")
-        .collection("users")
-        .insertOne(dataToInsert);
-      console.log(result.insertedCount);
-      return result.insertedCount;
+    let dataToInsert = {
+      userId: userId,
+      pwd: pwd,
+      groups: groups,
+    };
+    const result = await client
+      .db("data")
+      .collection("users")
+      .insertOne(dataToInsert);
+    console.log(result.insertedCount);
+    return result.insertedCount;
     // } else {
     //   console.log("user does not exist");
     //   return false;
@@ -84,4 +84,54 @@ const doesUserExists = async (user) => {
   }
 };
 
-module.exports = { updateUser, insertUser, MongoConnect, doesUserExists };
+const insertGroup = async (group) => {
+  try {
+    let doesAlreadyExist = await doesFieldExist("groupName", group);
+    if (!doesAlreadyExist) {
+      let dataToInsert = {
+        groupName: group,
+        messages: [],
+      };
+      let findResult = await client
+        .db("data")
+        .collection("users")
+        .insertOne(dataToInsert);
+    } else {
+      return "group already exists";
+    }
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+const insertMessages = async (group, data) => {
+  let findResult = await client
+    .db("data")
+    .collection("users")
+    .updateOne({ groupName: group }, { $push: { messages: data } });
+  return findResult;
+};
+
+const doesFieldExist = async (field, fieldValue) => {
+  try {
+    let dataToFind = { [field]: fieldValue };
+    let findResult = await client
+      .db("data")
+      .collection("users")
+      .findOne(dataToFind);
+    return findResult;
+  } catch (err) {
+    console.log(err);
+    return err;
+  }
+};
+
+module.exports = {
+  updateUser,
+  insertUser,
+  MongoConnect,
+  doesUserExists,
+  insertGroup,
+  doesFieldExist,
+  insertMessages,
+};

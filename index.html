@@ -57,12 +57,12 @@
   </head>
   <body>
     <ul id="messages"></ul>
-      <script>
-        let path=''
-        const buttonClick=(path)=>{
-          window.location=`/${path}`
-        };
-      </script>
+    <script>
+      let path = "";
+      const buttonClick = (path) => {
+        window.location = `/${path}`;
+      };
+    </script>
 
     <form id="form" action="/socket">
       <input id="input" autocomplete="off" /><button type="submit">Send</button>
@@ -84,17 +84,21 @@
       var input = document.getElementById("input");
 
       let cookie = document.cookie;
-      let tempCookie = cookie.split(";")
-      let userName = tempCookie.filter(x=>x.includes("userName"))[0].split("=")[1]
-      let currGroup = tempCookie.filter(x=>x.includes("group"))[0].split("=")[1]
-      let pwd = tempCookie.filter(x=>x.includes("pwd"))[0].split("=")[1]
+      let tempCookie = cookie.split(";");
+      let userName = tempCookie
+        .filter((x) => x.includes("userName"))[0]
+        .split("=")[1];
+      let currGroup = tempCookie
+        .filter((x) => x.includes("group"))[0]
+        .split("=")[1];
+      let pwd = tempCookie.filter((x) => x.includes("pwd"))[0].split("=")[1];
 
-      console.log(userName,pwd,currGroup)
+      console.log(userName, pwd, currGroup);
 
       socket.emit("join", {
         user: userName,
-        pwd:pwd,
-        currGroup:currGroup,
+        pwd: pwd,
+        currGroup: currGroup,
       });
 
       form.addEventListener("submit", function (e) {
@@ -103,12 +107,16 @@
           socket.emit("chat message", {
             user: userName,
             data: input.value,
-            currGroup:currGroup
+            currGroup: currGroup,
           });
           input.value = "";
         }
       });
-
+      socket.on("session", function ({ sessionID }) {
+        socket.auth[ 'sessionID'] =  sessionID ;
+        localStorage.setItem("sessionID", sessionID);
+        console.log(sessionID, "sessionid");
+      });
       socket.on("disconnect", function (msg) {
         if (reason === "io server disconnect") {
           socket.connect();
