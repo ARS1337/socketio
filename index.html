@@ -68,7 +68,6 @@
       <input id="input" autocomplete="off" /><button type="submit">Send</button>
       <button onclick="buttonClick('joinGroup')">join group</button>
       <button onclick="buttonClick('privateChat')">private chat</button>
-      <button onclick="buttonClick('createGroup')">create group</button>
     </form>
     <script src="/socket.io/socket.io.js"></script>
     <script
@@ -77,8 +76,9 @@
       crossorigin="anonymous"
     ></script>
     <script>
-      var socket = io();
+      let sessionStorage = window.sessionStorage;
 
+      var socket = io();
       var messages = document.getElementById("messages");
       var form = document.getElementById("form");
       var input = document.getElementById("input");
@@ -92,6 +92,7 @@
         .filter((x) => x.includes("group"))[0]
         .split("=")[1];
       let pwd = tempCookie.filter((x) => x.includes("pwd"))[0].split("=")[1];
+      let private = tempCookie.filter((x) => x.includes("private"))[0].split("=")[1];
 
       console.log(userName, pwd, currGroup);
 
@@ -99,6 +100,7 @@
         user: userName,
         pwd: pwd,
         currGroup: currGroup,
+        private:private,
       });
 
       form.addEventListener("submit", function (e) {
@@ -113,14 +115,12 @@
         }
       });
       socket.on("session", function ({ sessionID }) {
-        socket.auth[ 'sessionID'] =  sessionID ;
-        localStorage.setItem("sessionID", sessionID);
+        socket.auth = {sessionID};
+        sessionStorage.setItem("sessionID", sessionID);
         console.log(sessionID, "sessionid");
       });
       socket.on("disconnect", function (msg) {
-        if (reason === "io server disconnect") {
-          socket.connect();
-        }
+
       });
       socket.on("chat message", function (msg) {
         var item = document.createElement("li");

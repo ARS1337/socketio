@@ -8,12 +8,15 @@ const client = new MongoClient(uri, {
   useUnifiedTopology: true,
 });
 
+let userCollection;
+
 let MongoConnect = async () => {
   try {
     await client.connect();
     await client.db("data").command({ ping: 1 });
     console.log("Connected to server successfully!");
     const db = client.db("data");
+    userCollection = await client.db("data").collection("users");
   } catch (err) {
     console.log(err);
   }
@@ -126,6 +129,56 @@ const doesFieldExist = async (field, fieldValue) => {
   }
 };
 
+const findAndInsertGroupPrivate = async (username1, username2) => {
+  if (username1 && username2) {
+    let groupName = `${username1}mmm${username2}`;
+    let findResult = await doesPrivateGroupExist(groupName);
+    if (!findResult) {
+      groupName = `${username2}mmm${username1}`;
+      let findResult1 = await doesPrivateGroupExist(groupName);
+      if (!findResult1) {
+        await insertGroupPrivate(groupName);
+      } else {
+        return groupName;
+      }
+    } else {
+      return groupName;
+    }
+    return groupName;
+  } else {
+    return (
+      "username is not defined: username1:" + username1 + " and username2: " + username2
+    );
+  }
+};
+const doesPrivateGroupExist = async (groupName) => {
+  let filter = {
+    groupName: groupName,
+    type: "private",
+  };
+  let findResult = await userCollection.findOne(filter);
+  return findResult;
+};
+
+const insertGroupPrivate = async (groupName) => {
+  let dataToInsert = {
+    groupName: groupName,
+    type: "private",
+    messages: [],
+  };
+  let results = await userCollection.insertOne(dataToInsert);
+  return results;
+};
+
+const insertMessagesPrivate = async (username1, username2, data) => {
+  let groupName = await findAndInsertGroupPrivate(username1, username2);
+  let findResult = await userCollection.updateOne(
+    { groupName: groupName, type: "private" },
+    { $push: { messages: data } }
+  );
+  return findResult;
+};
+
 module.exports = {
   updateUser,
   insertUser,
@@ -134,4 +187,6 @@ module.exports = {
   insertGroup,
   doesFieldExist,
   insertMessages,
+  findAndInsertGroupPrivate,
+  insertMessagesPrivate,
 };

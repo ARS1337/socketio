@@ -8,8 +8,18 @@
   </head>
   <body>
     <form action="/privateChat" method="POST">
-      <label for="name">Name: <input name="name" id="name" /> </label><br />
-      <button type="submit"> Private Chat </button>
+      <label for="kname">Name: <input name="connectTo" id="kname" /> </label
+      ><br />
+      <input name="currUser" id="username" hidden />
+      <button type="submit">Private Chat</button>
     </form>
+    <script>
+      let cookie = document.cookie;
+      let tempCookie = cookie.split(";");
+      let userName = tempCookie
+        .filter((x) => x.includes("userName"))[0]
+        .split("=")[1];
+      document.getElementById("username").value = userName;
+    </script>
   </body>
 </html>
